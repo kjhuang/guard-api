@@ -8,7 +8,6 @@ WORKDIR /code
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get -y install libpq-dev
-RUN apt-get -y install ffmpeg
 
 # Copy the requirements file to the working directory
 COPY ./requirements.txt /code/requirements.txt
