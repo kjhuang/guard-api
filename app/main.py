@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.item_route import router as item_router
 from app.routes.order_route import router as order_router
 
-app = FastAPI(title="guard api", description="guard api doc", version="0.0.1")
+app = FastAPI(title="guard api", description="guard api doc", version="0.0.0")
 
 
 # set cors
