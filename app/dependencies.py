@@ -8,6 +8,7 @@ from fastapi import Depends
 
 from app.db.database_async import AsyncSessionLocal
 from app.db.unit_of_work import AsyncUnitOfWork
+from app.service.announce_service import AnnounceService
 from app.service.item_service import ItemService
 from app.service.order_service import OrderService
 from app.service.site_service import SiteService
@@ -28,6 +29,12 @@ async def get_site_service(
     uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
 ) -> SiteService:
     return SiteService(uow)
+
+
+async def get_announce_service(
+    uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
+) -> AnnounceService:
+    return AnnounceService(uow)
 
 
 async def get_item_service(
