@@ -5,6 +5,7 @@ app main
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routes.auth_route import router as auth_router
 from app.routes.item_route import router as item_router
 from app.routes.order_route import router as order_router
 
@@ -22,5 +23,6 @@ app.add_middleware(
 )
 
 
+app.include_router(auth_router)
 app.include_router(item_router)
 app.include_router(order_router)
