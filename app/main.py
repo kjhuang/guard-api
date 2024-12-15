@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth_route import router as auth_router
 from app.routes.item_route import router as item_router
 from app.routes.order_route import router as order_router
+from app.routes.site_route import router as site_router
 
 app = FastAPI(title="guard api", description="guard api doc", version="0.0.0")
 
@@ -24,5 +25,6 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
+app.include_router(site_router)
 app.include_router(item_router)
 app.include_router(order_router)

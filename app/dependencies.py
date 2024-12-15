@@ -10,6 +10,7 @@ from app.db.database_async import AsyncSessionLocal
 from app.db.unit_of_work import AsyncUnitOfWork
 from app.service.item_service import ItemService
 from app.service.order_service import OrderService
+from app.service.site_service import SiteService
 
 
 async def get_async_unit_of_work() -> AsyncGenerator[AsyncUnitOfWork, None]:
@@ -21,6 +22,12 @@ async def get_async_unit_of_work() -> AsyncGenerator[AsyncUnitOfWork, None]:
         yield uow
     finally:
         pass
+
+
+async def get_site_service(
+    uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
+) -> SiteService:
+    return SiteService(uow)
 
 
 async def get_item_service(
