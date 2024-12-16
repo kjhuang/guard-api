@@ -2,9 +2,12 @@
 app main
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.utils.config as config
 from app.routes.announce_route import router as announce_router
 from app.routes.auth_route import router as auth_router
 from app.routes.item_route import router as item_router
@@ -13,6 +16,8 @@ from app.routes.site_route import router as site_router
 
 app = FastAPI(title="guard api", description="guard api doc", version="0.0.0")
 
+# Ensure upload dir exists
+os.makedirs(config.UPLOAD_DIR, exist_ok=True)
 
 # set cors
 origins = ["*"]

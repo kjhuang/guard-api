@@ -10,4 +10,4 @@ MINIO_HOST = os.getenv("MINIO_HOST", default=None)
 MINIO_PORT = os.getenv("MINIO_PORT", default=None)
 MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", default=None)
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", default=None)
-UPLOAD_DIR = "/uploads"
+UPLOAD_DIR = "./uploads"
