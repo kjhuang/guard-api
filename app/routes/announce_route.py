@@ -2,6 +2,8 @@
 announce route
 """
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 import app.schemas.announce_schema as announce_schema
@@ -33,6 +35,22 @@ async def read_announce(
     announce_id: str, service: AnnounceService = Depends(get_announce_service)
 ):
     return await service.get_announce(announce_id)
+
+
+@router.patch("/{announce_id}")
+async def update_announce(
+    announce_id: str,
+    site_id: Annotated[str, Form()] = None,
+    title: Annotated[str, Form()] = None,
+    severity: Annotated[int, Form()] = None,
+    file: Annotated[UploadFile, File()] = None,
+    service: AnnounceService = Depends(get_announce_service),
+    auth: dict = Depends(authenticate),
+) -> announce_schema.Announce:
+    """
+    Update announce
+    """
+    pass
 
 
 @router.get("", response_model=list[announce_schema.AnnounceView])
