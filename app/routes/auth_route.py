@@ -2,8 +2,6 @@
 auth route
 """
 
-from datetime import timedelta
-
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -27,9 +25,7 @@ def login(user: User):
         user.username in fake_users_db
         and user.password == fake_users_db[user.username]["password"]
     ):
-        access_token = create_access_token(
-            data={"sub": user.username}, expires_delta=timedelta(minutes=30)
-        )
+        access_token = create_access_token(data={"sub": user.username})
         return {"access_token": access_token, "token_type": "bearer"}
     else:
         raise HTTPException(status_code=400, detail="Invalid username or password")
