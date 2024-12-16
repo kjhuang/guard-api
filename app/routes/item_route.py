@@ -5,6 +5,7 @@ item route
 from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.item_schema as item_schema
+from app.auth.auth_handler import authenticate
 from app.dependencies import get_item_service
 from app.service.item_service import ItemService
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/api/items", tags=["items"])
 async def create_item(
     item_create: item_schema.ItemCreate,
     service: ItemService = Depends(get_item_service),
+    auth: dict = Depends(authenticate),
 ) -> item_schema.Item:
     return await service.create_item(item_create)
 
@@ -27,7 +29,10 @@ async def read_item(item_id: str, service: ItemService = Depends(get_item_servic
 
 @router.get("/", response_model=list[item_schema.Item])
 async def read_items(
-    skip: int = 0, limit: int = 10, service: ItemService = Depends(get_item_service)
+    skip: int = 0,
+    limit: int = 10,
+    service: ItemService = Depends(get_item_service),
+    auth: dict = Depends(authenticate),
 ):
     items = await service.get_items()
     return items
