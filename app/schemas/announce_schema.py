@@ -4,10 +4,10 @@ announce schema
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, field_serializer, computed_field, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer
 
-from app.schemas.site_schema import Site
 import app.utils.config as config
+from app.schemas.site_schema import Site
 
 
 class AnnounceInput(BaseModel):

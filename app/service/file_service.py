@@ -37,16 +37,12 @@ async def create_from_local(
     return object_name
 
 
-async def create_from_upload(
-    upload_file: UploadFile, module_name: str
-) -> str:
+async def create_from_upload(upload_file: UploadFile, module_name: str) -> str:
     ori_filename = upload_file.filename
 
     temp_file_path = save_upload_file(upload_file)
 
-    object_name = await create_from_local(
-        temp_file_path, ori_filename, module_name
-    )
+    object_name = await create_from_local(temp_file_path, ori_filename, module_name)
 
     os.remove(temp_file_path)
 
