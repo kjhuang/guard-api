@@ -2,7 +2,7 @@
 announce model
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, String
+from sqlalchemy import Column, DateTime, ForeignKey, String, Integer
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
@@ -14,7 +14,7 @@ class Announce(Base):
     id = Column(String(64), primary_key=True)
     site_id = Column(String(64), ForeignKey("site.site_id"), nullable=False)
     title = Column(String(100), nullable=False)
-    severity = Column(String(20))
+    severity = Column(Integer, nullable=False)
     content_path = Column(String(600))
     publish_date = Column(DateTime)
 

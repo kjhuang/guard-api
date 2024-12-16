@@ -13,14 +13,14 @@ import app.utils.config as config
 class AnnounceInput(BaseModel):
     site_id: str
     title: str
-    severity: str
+    severity: int
 
 
 class Announce(BaseModel):
     id: str
     site_id: str
     title: str
-    severity: str
+    severity: int
     content_path: str
     publish_date: datetime
 
