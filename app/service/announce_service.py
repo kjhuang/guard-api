@@ -3,7 +3,7 @@ announce service
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import UploadFile
 
@@ -28,7 +28,7 @@ class AnnounceService:
             new_announce = Announce(
                 id=str(uuid.uuid4()),
                 content_path=object_name,
-                publish_date=datetime.now(),
+                publish_date=datetime.now(timezone.utc),
                 **announce_input.model_dump(),
             )
             announce_repo = AnnounceRepository(uow.session)
