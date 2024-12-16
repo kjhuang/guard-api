@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/announce", tags=["announce"])
 async def create_announcement(
     site_id: str = Form(...),
     title: str = Form(...),
-    severity: str = Form(...),
+    severity: int = Form(...),
     file: UploadFile = File(...),
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
