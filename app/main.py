@@ -14,7 +14,7 @@ from app.routes.auth_route import router as auth_router
 # from app.routes.order_route import router as order_router
 from app.routes.site_route import router as site_router
 
-app = FastAPI(title="guard api", description="guard api doc", version="0.0.0")
+app = FastAPI(title="guard api", description="guard api doc", version="0.0.1")
 
 # Ensure upload dir exists
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
