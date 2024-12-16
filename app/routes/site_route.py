@@ -17,7 +17,7 @@ class Site(BaseModel):
     site_name: str
 
 
-@router.get("/", response_model=list[Site])
+@router.get("", response_model=list[Site])
 async def read_items(
     service: SiteService = Depends(get_site_service),
     auth: dict = Depends(authenticate),

@@ -12,7 +12,7 @@ from app.service.announce_service import AnnounceService
 router = APIRouter(prefix="/api/announce", tags=["announce"])
 
 
-@router.post("/")
+@router.post("")
 async def create_announcement(
     site_id: str = Form(...),
     title: str = Form(...),
@@ -35,7 +35,7 @@ async def read_announce(
     return await service.get_announce(announce_id)
 
 
-@router.get("/", response_model=list[announce_schema.AnnounceView])
+@router.get("", response_model=list[announce_schema.AnnounceView])
 async def read_announces(
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
