@@ -10,7 +10,7 @@ import app.utils.config as config
 from app.schemas.site_schema import Site
 
 
-class AnnounceInput(BaseModel):
+class AnnounceCreate(BaseModel):
     site_id: str
     title: str
     severity: int

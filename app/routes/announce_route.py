@@ -23,11 +23,11 @@ async def create_announcement(
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
 ) -> announce_schema.Announce:
-    announce_input = announce_schema.AnnounceInput(
+    announce_create = announce_schema.AnnounceCreate(
         site_id=site_id, title=title, severity=severity
     )
 
-    return await service.create_announce(announce_input, file)
+    return await service.create_announce(announce_create, file)
 
 
 @router.get("/{announce_id}", response_model=announce_schema.AnnounceView)

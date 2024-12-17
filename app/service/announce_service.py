@@ -19,7 +19,7 @@ class AnnounceService:
         self.uow = uow
 
     async def create_announce(
-        self, announce_input: announce_schema.AnnounceInput, content_file: UploadFile
+        self, announce_input: announce_schema.AnnounceCreate, content_file: UploadFile
     ) -> announce_schema.Announce:
         module_name = f"announce/{announce_input.site_id}"
         object_name = await create_from_upload(content_file, module_name)
