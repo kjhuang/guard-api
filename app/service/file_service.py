@@ -47,3 +47,11 @@ async def create_from_upload(upload_file: UploadFile, module_name: str) -> str:
     os.remove(temp_file_path)
 
     return object_name
+
+
+async def delete_blob(object_name: str):
+    if not object_name:
+        return
+
+    minio_blob_service = MinioBlobService()
+    await minio_blob_service.delete(object_name)

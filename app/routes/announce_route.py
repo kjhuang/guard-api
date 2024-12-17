@@ -4,7 +4,7 @@ announce route
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, UploadFile
 
 import app.schemas.announce_schema as announce_schema
 from app.auth.auth_handler import authenticate
@@ -40,17 +40,15 @@ async def read_announce(
 @router.patch("/{announce_id}")
 async def update_announce(
     announce_id: str,
-    site_id: Annotated[str, Form()] = None,
-    title: Annotated[str, Form()] = None,
-    severity: Annotated[int, Form()] = None,
-    file: Annotated[UploadFile, File()] = None,
+    update_data: announce_schema.AnnounceUpdateInputJS = Body(...),
+    file: Annotated[UploadFile | None, File(...)] = None,
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
 ) -> announce_schema.Announce:
     """
     Update announce
     """
-    pass
+    return await service.update_announce(announce_id, update_data.content, file)
 
 
 @router.get("", response_model=list[announce_schema.AnnounceView])

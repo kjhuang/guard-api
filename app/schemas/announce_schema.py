@@ -2,9 +2,17 @@
 announce schema
 """
 
+import json
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    field_serializer,
+    model_validator,
+)
 
 import app.utils.config as config
 from app.schemas.site_schema import Site
@@ -14,6 +22,27 @@ class AnnounceCreate(BaseModel):
     site_id: str
     title: str
     severity: int
+
+
+class AnnounceUpdateInput(BaseModel):
+    site_id: str | None = None
+    title: str | None = None
+    severity: int | None = None
+
+
+class AnnounceUpdateInputJS(BaseModel):
+    content: AnnounceUpdateInput
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_to_json(cls, value):
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
+
+class AnnounceUpdate(AnnounceUpdateInput):
+    content_path: str | None = None
 
 
 class Announce(BaseModel):
