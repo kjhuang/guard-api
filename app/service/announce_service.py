@@ -70,10 +70,10 @@ class AnnounceService:
 
             return announce_schema.Announce.model_validate(announce)
 
-    async def get_announces(self) -> list[announce_schema.AnnounceView]:
+    async def get_announces(self, site_id: str | None = None) -> list[announce_schema.AnnounceView]:
         async with self.uow as uow:
             announce_repo = AnnounceRepository(uow.session)
-            announces = await announce_repo.get_announces()
+            announces = await announce_repo.get_announces(site_id)
 
             return [
                 announce_schema.AnnounceView.model_validate(announce)

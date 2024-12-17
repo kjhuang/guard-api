@@ -53,8 +53,9 @@ async def update_announce(
 
 @router.get("", response_model=list[announce_schema.AnnounceView])
 async def read_announces(
+    site_id: str | None = None,
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
 ):
-    announces = await service.get_announces()
+    announces = await service.get_announces(site_id)
     return announces
