@@ -22,8 +22,9 @@ class AnnounceRepository(BaseRepository[Announce]):
         )
         return result.scalar_one_or_none()
 
-    async def get_announces(self) -> list[Announce]:
-        result = await self.session.execute(
-            select(Announce).options(joinedload(Announce.site))
-        )
+    async def get_announces(self, site_id: str | None = None) -> list[Announce]:
+        stmt = select(Announce).options(joinedload(Announce.site))
+        if site_id:
+            stmt = stmt.where(Announce.site_id == site_id)
+        result = await self.session.execute(stmt)
         return result.scalars().all()

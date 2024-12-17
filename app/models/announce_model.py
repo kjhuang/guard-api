@@ -2,7 +2,7 @@
 announce model
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Integer
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
