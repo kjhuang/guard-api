@@ -28,7 +28,7 @@ class AnnounceService:
             new_announce = Announce(
                 id=str(uuid.uuid4()),
                 content_path=object_name,
-                publish_date=datetime.now(timezone.utc),
+                publish_date=datetime.now(),
                 **announce_create.model_dump(),
             )
             announce_repo = AnnounceRepository(uow.session)
