@@ -4,7 +4,7 @@ announce route
 
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
 
 import app.schemas.announce_schema as announce_schema
 from app.auth.auth_handler import authenticate
@@ -59,3 +59,16 @@ async def read_announces(
 ):
     announces = await service.get_announces(site_id)
     return announces
+
+
+@router.delete("/{announce_id}", status_code=204)
+async def delete_item(
+    announce_id: str, service: AnnounceService = Depends(get_announce_service)
+):
+    """
+    Delete a item by ID.
+    """
+    try:
+        await service.delete_announce(announce_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
