@@ -69,6 +69,10 @@ class AnnounceView(Announce):
         return value.strftime("%Y/%m/%d %H:%M:%S")
 
     @computed_field
+    def publish_ts(self) -> int:
+        return int(self.publish_date.timestamp())
+
+    @computed_field
     @property
     def url(self) -> str:
         return config.BLOB_URL_PREFIX + self.content_path if self.content_path else None

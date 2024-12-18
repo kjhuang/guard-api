@@ -3,7 +3,7 @@ announce service
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from fastapi import UploadFile
 
@@ -51,7 +51,9 @@ class AnnounceService:
         content_file: UploadFile | None,
     ) -> announce_schema.Announce:
         async with self.uow as uow:
-            announce_update = announce_schema.AnnounceUpdate(**announce_update_input.model_dump(exclude_unset=True))
+            announce_update = announce_schema.AnnounceUpdate(
+                **announce_update_input.model_dump(exclude_unset=True)
+            )
             announce_repo = AnnounceRepository(uow.session)
             announce = await announce_repo.get_announce(announce_id)
             if not announce:
@@ -70,7 +72,9 @@ class AnnounceService:
 
             return announce_schema.Announce.model_validate(announce)
 
-    async def get_announces(self, site_id: str | None = None) -> list[announce_schema.AnnounceView]:
+    async def get_announces(
+        self, site_id: str | None = None
+    ) -> list[announce_schema.AnnounceView]:
         async with self.uow as uow:
             announce_repo = AnnounceRepository(uow.session)
             announces = await announce_repo.get_announces(site_id)
@@ -79,3 +83,16 @@ class AnnounceService:
                 announce_schema.AnnounceView.model_validate(announce)
                 for announce in announces
             ]
+
+    async def delete_announce(self, announce_id: str):
+        """
+        Delete announce by it
+        """
+        async with self.uow as uow:
+            announce_repo = AnnounceRepository(uow.session)
+            announce = await announce_repo.get_by_keys(id=announce_id)
+            if not announce:
+                raise ValueError("Announce not found")
+            if announce.content_path:
+                await delete_blob(announce.content_path)
+            await announce_repo.delete_obj(announce)
