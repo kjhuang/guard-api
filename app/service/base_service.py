@@ -30,30 +30,31 @@ class BaseService(
 
     def __init__(self, uow: AsyncUnitOfWork):
         self.uow = uow
-        self.repository_instance = self.repository()
+        # self.repository_instance = self.repository(self.uow.session)
+        # print("[BaseService]__init__, self.uow.session=", self.uow.session)
         # self.output_schema = output_schema
 
-    async def prepare_create_data(self, create_data: CreateSchemaType) -> dict:
+    async def prepare_create_data(self, create_data: CreateSchemaType) -> ModelType:
         """Hook for preparing creation data."""
-        return create_data.model_dump()
+        return ModelType(**create_data.model_dump())
 
-    async def prepare_update_data(
-        self, update_data: UpdateSchemaType, obj: ModelType
-    ) -> dict:
-        """
-        Hook for preparing update data.
-        Subclasses can override to customize behavior.
-        """
-        data = update_data.model_dump(exclude_unset=True)
-        for field, value in data.items():
-            setattr(obj, field, value)
-        return obj
+    # async def prepare_update_data(
+    #     self, update_data: UpdateSchemaType, obj: ModelType
+    # ) -> dict:
+    #     """
+    #     Hook for preparing update data.
+    #     Subclasses can override to customize behavior.
+    #     """
+    #     data = update_data.model_dump(exclude_unset=True)
+    #     for field, value in data.items():
+    #         setattr(obj, field, value)
+    #     return obj
 
     async def pre_create_hook(self, *args, **kwargs):
         """Pre-create hook for additional logic."""
         pass
 
-    async def pre_update_hook(self, obj: ModelType, update_data: UpdateSchemaType):
+    async def pre_update_hook(self, update_data: UpdateSchemaType, **kwargs: Any):
         """Pre-update hook for additional logic."""
         pass
 
@@ -61,18 +62,20 @@ class BaseService(
         """Post-create hook for additional logic."""
         pass
 
-    async def post_update_hook(self, obj: ModelType):
+    async def post_update_hook(self, obj: ModelType, **kwargs: Any):
         """Post-update hook for additional logic."""
         pass
 
     async def create(self, create_data: CreateSchemaType) -> OutputSchemaType:
         """Main create method, wrapped with hooks and middleware logic."""
-        async with self.uow() as session:
-            await self.pre_create_hook(create_data=create_data)
+        async with self.uow as uow:
+            # await self.pre_create_hook(create_data=create_data)
             prepared_data = await self.prepare_create_data(create_data)
-            obj = await self.repository_instance.create(session, prepared_data)
-            await self.post_create_hook(obj)
-            return self.output_schema.model_validate(obj)
+
+            repository_instance = self.repository(uow.session)
+            await repository_instance.create(prepared_data)
+            # await self.post_create_hook(prepared_data)
+            return self.output_schema.model_validate(prepared_data)
 
     async def update(
         self, update_data: UpdateSchemaType, **primary_key_values: Any
@@ -80,23 +83,26 @@ class BaseService(
         """
         Main update method, wrapped with hooks and middleware logic.
         """
-        async with self.uow() as session:
+        async with self.uow as uow:
+            repository_instance = self.repository(uow.session)
             # Retrieve the existing object
-            obj = await self.repository_instance.get_by_keys(session, primary_key_values)
+            obj = await repository_instance.get_by_keys(**primary_key_values)
             if not obj:
                 return None
 
             # Pre-update logic
-            await self.pre_update_hook(obj, update_data)
+            # await self.pre_update_hook(update_data, **primary_key_values)
 
             # Prepare update data
-            updated_obj = await self.prepare_update_data(update_data, obj)
+            # updated_obj = await self.prepare_update_data(update_data, obj)
 
             # Update the object in the repository
-            obj = await self.repository_instance.update(session, updated_obj)
+            obj = await repository_instance.update(
+                update_data.model_dump(), **primary_key_values
+            )
 
             # Post-update logic
-            await self.post_update_hook(obj)
+            # await self.post_update_hook(obj, **primary_key_values)
 
             # Return the updated object
             return self.output_schema.model_validate(obj)

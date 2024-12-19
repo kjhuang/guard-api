@@ -45,13 +45,15 @@ async def read_items(
 async def update_item(
     item_id: str,
     item_update: item_schema.ItemUpdate,
-    service: ItemService = Depends(get_item_service),
+    service: ItemService2 = Depends(get_item_service2),
 ) -> item_schema.Item:
     """
     Update item
     """
     try:
-        return await service.update_item(item_id, item_update)
+        # return await service.update_item(item_id, item_update)
+        result = await service_middleware(service, "update", item_update, id=item_id)
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 

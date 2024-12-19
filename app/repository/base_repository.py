@@ -6,7 +6,8 @@ from typing import Any, Generic, Type, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Load
+from sqlalchemy.sql import Select
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
 
@@ -23,14 +24,28 @@ class BaseRepository(Generic[ModelType]):
     #     """
     #     return await self.session.get(self.model, pk)
 
-    async def get_by_keys(self, **primary_key_values: Any) -> ModelType | None:
+    async def get_by_keys(
+        self, load_options: Load | None = None, **primary_key_values: Any
+    ) -> ModelType | None:
         """
         Get a single record by compound primary keys.
         :param primary_key_values: Key-value pairs representing the primary keys.
         """
-        stmt = select(self.model).filter_by(**primary_key_values)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        query: Select = select(self.model)
+        # Apply loading strategy if provided
+        if load_options:
+            query = query.options(load_options)
+        # Filter by primary key fields
+        query = query.filter_by(**primary_key_values)
+
+        # Execute the query
+        result = await self.session.execute(query)
+
+        return result.scalars().first()
+
+        # stmt = select(self.model).filter_by(**primary_key_values)
+        # result = await self.session.execute(stmt)
+        # return result.scalar_one_or_none()
 
     async def get_dynamic(self, **kwargs: Any) -> ModelType | None:
         """

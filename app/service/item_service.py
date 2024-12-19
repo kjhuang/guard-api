@@ -85,13 +85,13 @@ class ItemService2(
         # self.blob_storage = blob_storage
         # self.messaging_service = messaging_service
 
-    async def prepare_create_data(self, create_data: item_schema.ItemCreate) -> dict:
+    async def prepare_create_data(self, create_data: item_schema.ItemCreate) -> Item:
         """
         Custom data preparation: add extra fields or transformations.
         """
-        data = create_data.model_dump()
+        item = Item(id=str(uuid.uuid4()), **create_data.model_dump())
         # data["is_active"] = True  # Default active status
-        return data
+        return item
 
     # async def pre_create_hook(self, create_data: item_schema.ItemCreate):
     #     """
