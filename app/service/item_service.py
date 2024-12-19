@@ -8,6 +8,7 @@ import app.schemas.item_schema as item_schema
 from app.db.unit_of_work import AsyncUnitOfWork
 from app.models.item_model import Item
 from app.repository.item_repository import ItemRepository
+from app.service.base_service import BaseService
 
 
 class ItemService:
@@ -71,3 +72,41 @@ class ItemService:
             if not item:
                 raise ValueError("User not found")
             await item_repo.delete_obj(item)
+
+
+class ItemService2(
+    BaseService[Item, item_schema.ItemCreate, item_schema.ItemUpdate, item_schema.Item]
+):
+    repository = ItemRepository
+    output_schema = item_schema.Item
+
+    def __init__(self, uow: AsyncUnitOfWork):
+        super().__init__(uow)
+        # self.blob_storage = blob_storage
+        # self.messaging_service = messaging_service
+
+    async def prepare_create_data(self, create_data: item_schema.ItemCreate) -> dict:
+        """
+        Custom data preparation: add extra fields or transformations.
+        """
+        data = create_data.model_dump()
+        # data["is_active"] = True  # Default active status
+        return data
+
+    # async def pre_create_hook(self, create_data: item_schema.ItemCreate):
+    #     """
+    #     Pre-create logic: validate blob existence before creating the item.
+    #     """
+    #     if create_data.blob_id:
+    #         blob_exists = await self.blob_storage.check_blob_exists(create_data.blob_id)
+    #         if not blob_exists:
+    #             raise ValueError(f"Blob with ID {create_data.blob_id} does not exist.")
+
+    # async def post_create_hook(self, obj: Item):
+    #     """
+    #     Post-create logic: notify a messaging system after the item is created.
+    #     """
+    #     await self.messaging_service.send_message(
+    #         topic="item_created",
+    #         message={"item_id": obj.id, "name": obj.name},
+    #     )
