@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/repair_orders", tags=["repair_orders"])
 
 
 # CRUD operations
-@router.post("/")
+@router.post("")
 async def create_repair_order(
     repair_order_create: repair_order_schema.RepairOrderCreate,
     service: RepairOrderService = Depends(get_repair_order_service),
@@ -30,12 +30,15 @@ async def read_repair_order(
     return await service.get_repair_order(repair_order_id)
 
 
-@router.get("/", response_model=list[repair_order_schema.RepairOrderView])
+@router.get("", response_model=list[repair_order_schema.RepairOrderView])
 async def read_repair_orders(
+    site_id: str | None = None,
+    start_appointment_time: int | None = None,
+    end_appointment_time: int | None = None,
     service: RepairOrderService = Depends(get_repair_order_service),
     auth: dict = Depends(authenticate),
 ):
-    repair_orders = await service.get_repair_orders()
+    repair_orders = await service.get_repair_orders(site_id, start_appointment_time, end_appointment_time)
     return repair_orders
 
 

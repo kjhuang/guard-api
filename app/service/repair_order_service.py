@@ -25,7 +25,9 @@ class RepairOrderService:
                 # reserved_at = datetime.strptime(
                 #     repair_order_create.appointment_time, "%Y/%m/%d %H:%M"
                 # )
-                reserved_at = datetime.fromtimestamp(repair_order_create.appointment_time)
+                reserved_at = datetime.fromtimestamp(
+                    repair_order_create.appointment_time
+                )
             repair_order_repo = RepairOrderRepository(uow.session)
             new_repair_order = RepairOrder(
                 id=str(uuid.uuid4()),
@@ -49,11 +51,16 @@ class RepairOrderService:
             return repair_order_schema.RepairOrderView.model_validate(repair_order)
 
     async def get_repair_orders(
-        self, site_id: str | None = None
+        self,
+        site_id: str | None = None,
+        start_appointment_time: int | None = None,
+        end_appointment_time: int | None = None,
     ) -> list[repair_order_schema.RepairOrderView]:
         async with self.uow as uow:
             repair_order_repo = RepairOrderRepository(uow.session)
-            repair_orders = await repair_order_repo.get_repair_orders(site_id)
+            repair_orders = await repair_order_repo.get_repair_orders(
+                site_id, start_appointment_time, end_appointment_time
+            )
 
             return [
                 repair_order_schema.RepairOrderView.model_validate(repair_order)
