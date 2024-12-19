@@ -9,7 +9,7 @@ from fastapi import Depends
 from app.db.database_async import AsyncSessionLocal
 from app.db.unit_of_work import AsyncUnitOfWork
 from app.service.announce_service import AnnounceService
-from app.service.item_service import ItemService
+from app.service.item_service import ItemService, ItemService2
 from app.service.order_service import OrderService
 from app.service.repair_order_service import RepairOrderService
 from app.service.site_service import SiteService
@@ -42,6 +42,11 @@ async def get_item_service(
     uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
 ) -> ItemService:
     return ItemService(uow)
+
+async def get_item_service2(
+    uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
+) -> ItemService2:
+    return ItemService2(uow)
 
 
 async def get_order_service(

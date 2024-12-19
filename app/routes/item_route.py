@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.item_schema as item_schema
 from app.auth.auth_handler import authenticate
-from app.dependencies import get_item_service
-from app.service.item_service import ItemService
+from app.dependencies import get_item_service, get_item_service2
+from app.service.item_service import ItemService, ItemService2
+from app.service.service_middleware import service_middleware
 
 router = APIRouter(prefix="/api/items", tags=["items"])
 
@@ -16,10 +17,12 @@ router = APIRouter(prefix="/api/items", tags=["items"])
 @router.post("/")
 async def create_item(
     item_create: item_schema.ItemCreate,
-    service: ItemService = Depends(get_item_service),
+    service: ItemService2 = Depends(get_item_service2),
     auth: dict = Depends(authenticate),
 ) -> item_schema.Item:
-    return await service.create_item(item_create)
+    # return await service.create_item(item_create)
+    result = await service_middleware(service, "create", item_create)
+    return result
 
 
 @router.get("/{item_id}", response_model=item_schema.Item)
