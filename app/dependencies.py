@@ -11,6 +11,7 @@ from app.db.unit_of_work import AsyncUnitOfWork
 from app.service.announce_service import AnnounceService
 from app.service.item_service import ItemService
 from app.service.order_service import OrderService
+from app.service.repair_order_service import RepairOrderService
 from app.service.site_service import SiteService
 
 
@@ -47,3 +48,9 @@ async def get_order_service(
     uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
 ) -> OrderService:
     return OrderService(uow)
+
+
+async def get_repair_order_service(
+    uow: AsyncUnitOfWork = Depends(get_async_unit_of_work),
+) -> RepairOrderService:
+    return RepairOrderService(uow)

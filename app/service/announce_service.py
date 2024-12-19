@@ -33,7 +33,6 @@ class AnnounceService:
             )
             announce_repo = AnnounceRepository(uow.session)
             await announce_repo.create(new_announce)
-            print("new_announce:", new_announce)
             return announce_schema.Announce.model_validate(new_announce)
 
     async def get_announce(self, announce_id: str) -> announce_schema.AnnounceView:

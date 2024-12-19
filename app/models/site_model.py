@@ -20,3 +20,6 @@ class Site(Base):
 
     # Relationship with Announce
     announcements = relationship("Announce", back_populates="site")
+
+    # Relationship with repair order
+    repair_orders = relationship("RepairOrder", back_populates="site")
