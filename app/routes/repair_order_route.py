@@ -1,5 +1,5 @@
 """
-item route
+repair order route
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -22,7 +22,7 @@ async def create_repair_order(
     return await service.create_repair_order(repair_order_create)
 
 
-@router.get("/{repair_order_id}", response_model=repair_order_schema.RepairOrder)
+@router.get("/{repair_order_id}", response_model=repair_order_schema.RepairOrderView)
 async def read_repair_order(
     repair_order_id: str,
     service: RepairOrderService = Depends(get_repair_order_service),
@@ -30,7 +30,7 @@ async def read_repair_order(
     return await service.get_repair_order(repair_order_id)
 
 
-@router.get("/", response_model=list[repair_order_schema.RepairOrder])
+@router.get("/", response_model=list[repair_order_schema.RepairOrderView])
 async def read_repair_orders(
     service: RepairOrderService = Depends(get_repair_order_service),
     auth: dict = Depends(authenticate),
@@ -44,6 +44,7 @@ async def update_repair_order(
     repair_order_id: str,
     repair_order_update: repair_order_schema.RepairOrderUpdate,
     service: RepairOrderService = Depends(get_repair_order_service),
+    auth: dict = Depends(authenticate),
 ) -> repair_order_schema.RepairOrder:
     """
     Update item
@@ -58,6 +59,7 @@ async def update_repair_order(
 async def delete_repair_order(
     repair_order_id: str,
     service: RepairOrderService = Depends(get_repair_order_service),
+    auth: dict = Depends(authenticate),
 ):
     """
     Delete a repair_order by ID.
