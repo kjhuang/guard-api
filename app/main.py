@@ -17,7 +17,7 @@ from app.routes.repair_order_route import router as repair_order_router
 from app.routes.site_route import router as site_router
 from app.routes.value_route import router as value_router
 
-app = FastAPI(title="guard api", description="guard api doc", version="0.0.1.2")
+app = FastAPI(title="guard api", description="guard api doc", version="0.0.2")
 
 # Ensure upload dir exists
 os.makedirs(config.UPLOAD_DIR, exist_ok=True)
