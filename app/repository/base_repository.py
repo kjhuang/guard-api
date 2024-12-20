@@ -2,8 +2,9 @@
 base repository
 """
 
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Generic, List, Optional, Type, TypeVar
 
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import DeclarativeBase, Load
@@ -25,7 +26,7 @@ class BaseRepository(Generic[ModelType]):
     #     return await self.session.get(self.model, pk)
 
     async def get_by_keys(
-        self, load_options: Load | None = None, **primary_key_values: Any
+        self, load_options: Optional[List[Load]] = None, **primary_key_values: Any
     ) -> ModelType | None:
         """
         Get a single record by compound primary keys.
@@ -34,7 +35,9 @@ class BaseRepository(Generic[ModelType]):
         query: Select = select(self.model)
         # Apply loading strategy if provided
         if load_options:
-            query = query.options(load_options)
+            for option in load_options:
+                query = query.options(option)
+
         # Filter by primary key fields
         query = query.filter_by(**primary_key_values)
 
@@ -109,3 +112,45 @@ class BaseRepository(Generic[ModelType]):
         Remove a record from the session.
         """
         await self.session.delete(obj)
+
+    async def query(self, **kwargs: Any) -> List[ModelType]:
+        """
+        Retrieve all rows from the table matching the given filters.
+
+        :param kwargs: Dynamic filter conditions as key-value pairs.
+        :return: List of ORM model objects.
+        """
+        query = select(self.model)
+        filters = []
+        for key, value in kwargs.items():
+            if isinstance(key, tuple) and len(key) == 2:
+                field_name, operator = key
+                column = getattr(self.model, field_name, None)
+
+                if column is not None:
+                    # Map operator strings to SQLAlchemy expressions
+                    if operator == "in":
+                        filters.append(column.in_(value))
+                    elif operator == ">":
+                        filters.append(column > value)
+                    elif operator == "<":
+                        filters.append(column < value)
+                    elif operator == ">=":
+                        filters.append(column >= value)
+                    elif operator == "<=":
+                        filters.append(column <= value)
+                    elif operator == "like":
+                        filters.append(column.like(value))
+                    else:
+                        raise ValueError(f"Unsupported operator: {operator}")
+            else:
+                # Default to equality comparison for non-tuple keys
+                column = getattr(self.model, key, None)
+                if column is not None:
+                    filters.append(column == value)
+
+        if filters:
+            query = query.where(and_(*filters))
+
+        result = await self.session.execute(query)
+        return result.scalars().all()

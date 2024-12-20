@@ -2,7 +2,7 @@
 base service
 """
 
-from typing import Any, Generic, Optional, Type, TypeVar
+from typing import Any, Generic, Optional, Type, TypeVar, List
 
 from pydantic import BaseModel
 
@@ -10,16 +10,14 @@ from app.db.unit_of_work import AsyncUnitOfWork
 from app.repository.base_repository import BaseRepository
 
 # Type variables for models and schemas
-ModelType = TypeVar("ModelType")  # SQLAlchemy model
-CreateSchemaType = TypeVar(
-    "CreateSchemaType", bound=BaseModel
-)  # Pydantic schema for create
-UpdateSchemaType = TypeVar(
-    "UpdateSchemaType", bound=BaseModel
-)  # Pydantic schema for update
-OutputSchemaType = TypeVar(
-    "OutputSchemaType", bound=BaseModel
-)  # Pydantic schema for output
+# SQLAlchemy model
+ModelType = TypeVar("ModelType")
+# Pydantic schema for create
+CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
+# Pydantic schema for update
+UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+# Pydantic schema for output
+OutputSchemaType = TypeVar("OutputSchemaType", bound=BaseModel)
 
 
 class BaseService(
@@ -30,9 +28,6 @@ class BaseService(
 
     def __init__(self, uow: AsyncUnitOfWork):
         self.uow = uow
-        # self.repository_instance = self.repository(self.uow.session)
-        # print("[BaseService]__init__, self.uow.session=", self.uow.session)
-        # self.output_schema = output_schema
 
     async def prepare_create_data(self, create_data: CreateSchemaType) -> ModelType:
         """Hook for preparing creation data."""
@@ -106,3 +101,28 @@ class BaseService(
 
             # Return the updated object
             return self.output_schema.model_validate(obj)
+
+    async def get_by_keys(
+        self, **primary_key_values: Any
+    ) -> Optional[OutputSchemaType]:
+        async with self.uow as uow:
+            repository_instance = self.repository(uow.session)
+            obj = await repository_instance.get_by_keys(**primary_key_values)
+            if not obj:
+                return None
+            return self.output_schema.model_validate(obj)
+
+    async def delete_by_keys(self, **primary_key_values: Any) -> bool:
+        async with self.uow as uow:
+            repository_instance = self.repository(uow.session)
+            obj = await repository_instance.get_by_keys(**primary_key_values)
+            if not obj:
+                return False
+            await repository_instance.delete(obj)
+            return True
+
+    async def query(self, **kwargs: Any) -> List[OutputSchemaType]:
+        async with self.uow as uow:
+            repository_instance = self.repository(uow.session)
+            objs = await repository_instance.query(**kwargs)
+            return [self.output_schema.model_validate(obj) for obj in objs]

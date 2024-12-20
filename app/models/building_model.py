@@ -20,3 +20,6 @@ class Building(Base):
 
     # Relationship with Site
     site = relationship("Site", back_populates="buildings")
+
+    # relationship to payment order
+    payment_orders = relationship("PaymentOrder", back_populates="building")
