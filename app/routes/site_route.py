@@ -3,8 +3,8 @@ site route
 """
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 
+import app.schemas.site_schema as site_schema
 from app.auth.auth_handler import authenticate
 from app.dependencies import get_site_service
 from app.service.site_service import SiteService
@@ -12,13 +12,8 @@ from app.service.site_service import SiteService
 router = APIRouter(prefix="/api/site", tags=["site"])
 
 
-class Site(BaseModel):
-    site_id: str
-    site_name: str
-
-
-@router.get("", response_model=list[Site])
-async def read_items(
+@router.get("", response_model=list[site_schema.Site])
+async def read_sites(
     service: SiteService = Depends(get_site_service),
     auth: dict = Depends(authenticate),
 ):

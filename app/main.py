@@ -16,6 +16,7 @@ from app.routes.repair_order_route import router as repair_order_router
 # from app.routes.order_route import router as order_router
 from app.routes.site_route import router as site_router
 from app.routes.value_route import router as value_router
+from app.routes.buidling_route import router as building_router
 
 app = FastAPI(title="guard api", description="guard api doc", version="0.0.2")
 
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(site_router)
+app.include_router(building_router)
 app.include_router(announce_router)
 app.include_router(repair_order_router)
 app.include_router(value_router)
