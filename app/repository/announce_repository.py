@@ -3,7 +3,6 @@ announce repository
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.models.announce_model import Announce
@@ -15,16 +14,16 @@ class AnnounceRepository(BaseRepository[Announce]):
         super().__init__(session, Announce)
 
     async def get_announce(self, announce_id: str) -> Announce | None:
-        result = await self.session.execute(
-            select(Announce)
-            .options(joinedload(Announce.site))
-            .where(Announce.id == announce_id)
+        announce = await self.get_by_keys(
+            load_options=[joinedload(Announce.site)], id=announce_id
         )
-        return result.scalar_one_or_none()
+        return announce
 
     async def get_announces(self, site_id: str | None = None) -> list[Announce]:
-        stmt = select(Announce).options(joinedload(Announce.site))
+        filters = {}
         if site_id:
-            stmt = stmt.where(Announce.site_id == site_id)
-        result = await self.session.execute(stmt)
-        return result.scalars().all()
+            filters[("site_id", "==")] = site_id
+        announces = await self.query(
+            load_options=[joinedload(Announce.site)], filters=filters
+        )
+        return announces

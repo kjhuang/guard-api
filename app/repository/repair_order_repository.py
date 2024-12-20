@@ -1,9 +1,10 @@
 """
 repair_order repository
 """
+
 from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
 from app.models.repair_order_model import RepairOrder
@@ -15,12 +16,10 @@ class RepairOrderRepository(BaseRepository[RepairOrder]):
         super().__init__(session, RepairOrder)
 
     async def get_repair_order(self, repair_order_id: str) -> RepairOrder | None:
-        result = await self.session.execute(
-            select(RepairOrder)
-            .options(joinedload(RepairOrder.site))
-            .where(RepairOrder.id == repair_order_id)
+        repair_order = await self.get_by_keys(
+            load_options=[joinedload(RepairOrder.site)], id=repair_order_id
         )
-        return result.scalar_one_or_none()
+        return repair_order
 
     async def get_repair_orders(
         self,
@@ -28,14 +27,18 @@ class RepairOrderRepository(BaseRepository[RepairOrder]):
         start_appointment_time: int | None = None,
         end_appointment_time: int | None = None,
     ) -> list[RepairOrder]:
-        stmt = select(RepairOrder).options(joinedload(RepairOrder.site))
+        filters = {}
         if site_id:
-            stmt = stmt.where(RepairOrder.site_id == site_id)
+            filters[("site_id", "==")] = site_id
         if start_appointment_time:
-            dt = datetime.fromtimestamp(start_appointment_time)
-            stmt = stmt.where(RepairOrder.appointment_time >= dt)
+            filters[("appointment_time", ">=")] = datetime.fromtimestamp(
+                start_appointment_time
+            )
         if end_appointment_time:
-            dt = datetime.fromtimestamp(end_appointment_time)
-            stmt = stmt.where(RepairOrder.appointment_time < dt)
-        result = await self.session.execute(stmt)
-        return result.scalars().all()
+            filters[("appointment_time", "<=")] = datetime.fromtimestamp(
+                end_appointment_time
+            )
+        repair_orders = await self.query(
+            load_options=[joinedload(RepairOrder.site)], filters=filters
+        )
+        return repair_orders
