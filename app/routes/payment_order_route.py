@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/payment_orders", tags=["payment_orders"])
 
 
 # CRUD operations
-@router.post("/")
+@router.post("")
 async def create_payment_order(
     payment_order_create: payment_order_schema.PaymentOrderCreate,
     service: PaymentOrderService = Depends(get_payment_order_service),
@@ -23,7 +23,9 @@ async def create_payment_order(
     return result
 
 
-@router.get("/{payment_order_id}", response_model=payment_order_schema.PaymentOrder)
+@router.get(
+    "/{payment_order_id}", response_model=payment_order_schema.PaymentOrderView | None
+)
 async def read_payment_order(
     payment_order_id: str,
     service: PaymentOrderService = Depends(get_payment_order_service),
@@ -31,15 +33,20 @@ async def read_payment_order(
     return await service.get_by_keys(id=payment_order_id)
 
 
-# @router.get("/", response_model=list[item_schema.Item])
-# async def read_items(
-#     skip: int = 0,
-#     limit: int = 10,
-#     service: ItemService = Depends(get_item_service),
-#     auth: dict = Depends(authenticate),
-# ):
-#     items = await service.get_items()
-#     return items
+@router.get("", response_model=list[payment_order_schema.PaymentOrderView])
+async def read_payment_orders(
+    site_id: str | None = None,
+    building_id: str | None = None,
+    service: PaymentOrderService = Depends(get_payment_order_service),
+    auth: dict = Depends(authenticate),
+):
+    filters = {}
+    if site_id:
+        filters[("site_id", "=")] = site_id
+    if building_id:
+        filters[("building_id", "=")] = building_id
+    items = await service.query(filters=filters)
+    return items
 
 
 @router.patch("/{payment_order_id}")

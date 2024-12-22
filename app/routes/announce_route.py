@@ -24,17 +24,17 @@ async def create_announcement(
     auth: dict = Depends(authenticate),
 ) -> announce_schema.Announce:
     announce_create = announce_schema.AnnounceCreate(
-        site_id=site_id, title=title, severity=severity
+        site_id=site_id, title=title, severity=severity, content_file=file
     )
 
-    return await service.create_announce(announce_create, file)
+    return await service.create(announce_create)
 
 
-@router.get("/{announce_id}", response_model=announce_schema.AnnounceView)
+@router.get("/{announce_id}", response_model=announce_schema.AnnounceView | None)
 async def read_announce(
     announce_id: str, service: AnnounceService = Depends(get_announce_service)
 ):
-    return await service.get_announce(announce_id)
+    return await service.get_by_keys(id=announce_id)
 
 
 @router.patch("/{announce_id}")
@@ -48,7 +48,10 @@ async def update_announce(
     """
     Update announce
     """
-    return await service.update_announce(announce_id, update_data.content, file)
+    announce_update = announce_schema.AnnounceUpdate(
+        **update_data.content.model_dump(exclude_unset=True), content_file=file
+    )
+    return await service.update(announce_update, id=announce_id)
 
 
 @router.get("", response_model=list[announce_schema.AnnounceView])
@@ -57,18 +60,21 @@ async def read_announces(
     service: AnnounceService = Depends(get_announce_service),
     auth: dict = Depends(authenticate),
 ):
-    announces = await service.get_announces(site_id)
+    filters = {}
+    if site_id:
+        filters[("site_id", "=")] = site_id
+    announces = await service.query(filters=filters)
     return announces
 
 
 @router.delete("/{announce_id}", status_code=204)
-async def delete_item(
+async def delete_announce(
     announce_id: str, service: AnnounceService = Depends(get_announce_service)
 ):
     """
-    Delete a item by ID.
+    Delete a announce by ID.
     """
     try:
-        await service.delete_announce(announce_id)
+        await service.delete_by_keys(id=announce_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

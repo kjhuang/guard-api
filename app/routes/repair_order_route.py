@@ -2,6 +2,8 @@
 repair order route
 """
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.repair_order_schema as repair_order_schema
@@ -19,15 +21,17 @@ async def create_repair_order(
     service: RepairOrderService = Depends(get_repair_order_service),
     auth: dict = Depends(authenticate),
 ) -> repair_order_schema.RepairOrder:
-    return await service.create_repair_order(repair_order_create)
+    return await service.create(repair_order_create)
 
 
-@router.get("/{repair_order_id}", response_model=repair_order_schema.RepairOrderView)
+@router.get(
+    "/{repair_order_id}", response_model=repair_order_schema.RepairOrderView | None
+)
 async def read_repair_order(
     repair_order_id: str,
     service: RepairOrderService = Depends(get_repair_order_service),
 ):
-    return await service.get_repair_order(repair_order_id)
+    return await service.get_by_keys(id=repair_order_id)
 
 
 @router.get("", response_model=list[repair_order_schema.RepairOrderView])
@@ -38,7 +42,18 @@ async def read_repair_orders(
     service: RepairOrderService = Depends(get_repair_order_service),
     auth: dict = Depends(authenticate),
 ):
-    repair_orders = await service.get_repair_orders(site_id, start_appointment_time, end_appointment_time)
+    filters = {}
+    if site_id:
+        filters[("site_id", "=")] = site_id
+    if start_appointment_time:
+        filters[("appointment_time", ">=")] = datetime.fromtimestamp(
+            start_appointment_time
+        )
+    if end_appointment_time:
+        filters[("appointment_time", "<=")] = datetime.fromtimestamp(
+            end_appointment_time
+        )
+    repair_orders = await service.query(filters=filters)
     return repair_orders
 
 
@@ -53,7 +68,7 @@ async def update_repair_order(
     Update item
     """
     try:
-        return await service.update_repair_order(repair_order_id, repair_order_update)
+        return await service.update(repair_order_update, id=repair_order_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -68,6 +83,6 @@ async def delete_repair_order(
     Delete a repair_order by ID.
     """
     try:
-        await service.delete_repair_order(repair_order_id)
+        await service.delete_by_keys(id=repair_order_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))

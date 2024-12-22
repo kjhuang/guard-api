@@ -18,10 +18,13 @@ class PaymentOrderService(
         payment_order_schema.PaymentOrderCreate,
         payment_order_schema.PaymentOrderUpdate,
         payment_order_schema.PaymentOrder,
+        payment_order_schema.PaymentOrderView,
     ]
 ):
     repository = PaymentOrderRepository
     output_schema = payment_order_schema.PaymentOrder
+    query_schema = payment_order_schema.PaymentOrderView
+    relation_strategies = {"basic": ["site", "building"], "full": ["site", "building"]}
 
     def __init__(self, uow: AsyncUnitOfWork):
         super().__init__(uow)

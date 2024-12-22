@@ -7,6 +7,7 @@ from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer
 
+from app.schemas.common_schema import LookupValue
 from app.schemas.site_schema import Site
 
 REGIONS = {"public": "公共區", "personal": "個人居家"}
@@ -20,7 +21,7 @@ ITEM_TYPES = {
 
 RESERVATION_BYS = {"assistance": "管制室協助", "self": "自行預約"}
 
-STATUS = {
+REPAIR_ORDER_STATUS = {
     "init": "尚未處理",
     "reserved": "已預約",
     "processing": "師傅處理中",
@@ -40,8 +41,8 @@ class ReservationByValue(str, Enum):
     locals().update({k: k for k, _ in RESERVATION_BYS.items()})
 
 
-class StatusValue(str, Enum):
-    locals().update({k: k for k, _ in STATUS.items()})
+class RepairOrderStatusValue(str, Enum):
+    locals().update({k: k for k, _ in REPAIR_ORDER_STATUS.items()})
 
 
 class RepairOrderBase(BaseModel):
@@ -74,16 +75,11 @@ class RepairOrderUpdate(BaseModel):
 class RepairOrder(RepairOrderBase):
     id: str
     appointment_time: datetime | None = None
-    status: StatusValue
+    status: RepairOrderStatusValue
     created_at: str | datetime = None
     created_by: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class LookupValue(BaseModel):
-    id: str
-    value: str
 
 
 class RepairOrderView(RepairOrder):
@@ -123,4 +119,4 @@ class RepairOrderView(RepairOrder):
     def format_status(self, status: str | None) -> LookupValue | None:
         if status is None:
             return None
-        return LookupValue(id=status, value=STATUS[status])
+        return LookupValue(id=status, value=REPAIR_ORDER_STATUS[status])

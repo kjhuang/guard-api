@@ -15,5 +15,16 @@ class Building(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class BuildingView(Building):
+class BuildingFull(Building):
     site_id: str = Field(..., exclude=True)
+    site: Site | None = None
+
+
+class BuildingView(BaseModel):
+    building_id: str
+    building_name: str
+
+
+class SiteBuildingView(BaseModel):
+    site: Site
+    buildings: list[BuildingView]

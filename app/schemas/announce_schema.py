@@ -5,6 +5,7 @@ announce schema
 import json
 from datetime import datetime
 
+from fastapi import UploadFile
 from pydantic import (
     BaseModel,
     ConfigDict,
@@ -22,6 +23,7 @@ class AnnounceCreate(BaseModel):
     site_id: str
     title: str
     severity: int
+    content_file: UploadFile
 
 
 class AnnounceUpdateInput(BaseModel):
@@ -42,6 +44,7 @@ class AnnounceUpdateInputJS(BaseModel):
 
 
 class AnnounceUpdate(AnnounceUpdateInput):
+    content_file: UploadFile | None = None
     content_path: str | None = None
 
 
