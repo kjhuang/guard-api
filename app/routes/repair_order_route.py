@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.repair_order_schema as repair_order_schema
 from app.auth.auth_handler import authenticate
-from app.dependencies import get_repair_order_service
+from app.dependencies import get_service
 from app.service.repair_order_service import RepairOrderService
 
 router = APIRouter(prefix="/api/repair_orders", tags=["repair_orders"])
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/repair_orders", tags=["repair_orders"])
 @router.post("")
 async def create_repair_order(
     repair_order_create: repair_order_schema.RepairOrderCreate,
-    service: RepairOrderService = Depends(get_repair_order_service),
+    service: RepairOrderService = Depends(get_service(RepairOrderService)),
     auth: dict = Depends(authenticate),
 ) -> repair_order_schema.RepairOrder:
     return await service.create(repair_order_create)
@@ -29,7 +29,7 @@ async def create_repair_order(
 )
 async def read_repair_order(
     repair_order_id: str,
-    service: RepairOrderService = Depends(get_repair_order_service),
+    service: RepairOrderService = Depends(get_service(RepairOrderService)),
 ):
     return await service.get_by_keys(id=repair_order_id)
 
@@ -39,7 +39,7 @@ async def read_repair_orders(
     site_id: str | None = None,
     start_appointment_time: int | None = None,
     end_appointment_time: int | None = None,
-    service: RepairOrderService = Depends(get_repair_order_service),
+    service: RepairOrderService = Depends(get_service(RepairOrderService)),
     auth: dict = Depends(authenticate),
 ):
     filters = {}
@@ -61,7 +61,7 @@ async def read_repair_orders(
 async def update_repair_order(
     repair_order_id: str,
     repair_order_update: repair_order_schema.RepairOrderUpdate,
-    service: RepairOrderService = Depends(get_repair_order_service),
+    service: RepairOrderService = Depends(get_service(RepairOrderService)),
     auth: dict = Depends(authenticate),
 ) -> repair_order_schema.RepairOrder:
     """
@@ -76,7 +76,7 @@ async def update_repair_order(
 @router.delete("/{repair_order_id}", status_code=204)
 async def delete_repair_order(
     repair_order_id: str,
-    service: RepairOrderService = Depends(get_repair_order_service),
+    service: RepairOrderService = Depends(get_service(RepairOrderService)),
     auth: dict = Depends(authenticate),
 ):
     """

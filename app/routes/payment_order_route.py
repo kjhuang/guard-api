@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.payment_order_schema as payment_order_schema
 from app.auth.auth_handler import authenticate
-from app.dependencies import get_payment_order_service
+from app.dependencies import get_service
 from app.service.payment_order_service import PaymentOrderService
 
 router = APIRouter(prefix="/api/payment_orders", tags=["payment_orders"])
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/payment_orders", tags=["payment_orders"])
 @router.post("")
 async def create_payment_order(
     payment_order_create: payment_order_schema.PaymentOrderCreate,
-    service: PaymentOrderService = Depends(get_payment_order_service),
+    service: PaymentOrderService = Depends(get_service(PaymentOrderService)),
     auth: dict = Depends(authenticate),
 ) -> payment_order_schema.PaymentOrder:
     result = await service.create(payment_order_create)
@@ -28,7 +28,7 @@ async def create_payment_order(
 )
 async def read_payment_order(
     payment_order_id: str,
-    service: PaymentOrderService = Depends(get_payment_order_service),
+    service: PaymentOrderService = Depends(get_service(PaymentOrderService)),
 ):
     return await service.get_by_keys(id=payment_order_id)
 
@@ -37,7 +37,7 @@ async def read_payment_order(
 async def read_payment_orders(
     site_id: str | None = None,
     building_id: str | None = None,
-    service: PaymentOrderService = Depends(get_payment_order_service),
+    service: PaymentOrderService = Depends(get_service(PaymentOrderService)),
     auth: dict = Depends(authenticate),
 ):
     filters = {}
@@ -53,7 +53,7 @@ async def read_payment_orders(
 async def update_payment_order(
     payment_order_id: str,
     payment_order_update: payment_order_schema.PaymentOrderUpdate,
-    service: PaymentOrderService = Depends(get_payment_order_service),
+    service: PaymentOrderService = Depends(get_service(PaymentOrderService)),
 ) -> payment_order_schema.PaymentOrder:
     """
     Update payment_order
@@ -69,7 +69,7 @@ async def update_payment_order(
 @router.delete("/{payment_order_id}", status_code=204)
 async def delete_payment_order(
     payment_order_id: str,
-    service: PaymentOrderService = Depends(get_payment_order_service),
+    service: PaymentOrderService = Depends(get_service(PaymentOrderService)),
 ):
     """
     Delete a payment_order by ID.

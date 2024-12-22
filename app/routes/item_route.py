@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 import app.schemas.item_schema as item_schema
 from app.auth.auth_handler import authenticate
-from app.dependencies import get_item_service
+from app.dependencies import get_service
 from app.service.item_service import ItemService
 
 router = APIRouter(prefix="/api/items", tags=["items"])
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/api/items", tags=["items"])
 @router.post("/")
 async def create_item(
     item_create: item_schema.ItemCreate,
-    service: ItemService = Depends(get_item_service),
+    service: ItemService = Depends(get_service(ItemService)),
     auth: dict = Depends(authenticate),
 ) -> item_schema.Item:
     result = await service.create(item_create)
@@ -24,7 +24,9 @@ async def create_item(
 
 
 @router.get("/{item_id}", response_model=item_schema.Item | None)
-async def read_item(item_id: str, service: ItemService = Depends(get_item_service)):
+async def read_item(
+    item_id: str, service: ItemService = Depends(get_service(ItemService))
+):
     return await service.get_by_keys(id=item_id)
 
 
@@ -32,7 +34,7 @@ async def read_item(item_id: str, service: ItemService = Depends(get_item_servic
 async def read_items(
     skip: int = 0,
     limit: int = 10,
-    service: ItemService = Depends(get_item_service),
+    service: ItemService = Depends(get_service(ItemService)),
     auth: dict = Depends(authenticate),
 ):
     items = await service.query()
@@ -43,7 +45,7 @@ async def read_items(
 async def update_item(
     item_id: str,
     item_update: item_schema.ItemUpdate,
-    service: ItemService = Depends(get_item_service),
+    service: ItemService = Depends(get_service(ItemService)),
 ) -> item_schema.Item:
     """
     Update item
@@ -56,7 +58,9 @@ async def update_item(
 
 
 @router.delete("/{item_id}", status_code=204)
-async def delete_item(item_id: str, service: ItemService = Depends(get_item_service)):
+async def delete_item(
+    item_id: str, service: ItemService = Depends(get_service(ItemService))
+):
     """
     Delete a item by ID.
     """
