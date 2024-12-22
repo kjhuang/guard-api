@@ -45,8 +45,8 @@ async def read_payment_orders(
         filters[("site_id", "=")] = site_id
     if building_id:
         filters[("building_id", "=")] = building_id
-    items = await service.query(filters=filters)
-    return items
+    payment_orders = await service.query(filters=filters)
+    return payment_orders
 
 
 @router.patch("/{payment_order_id}")

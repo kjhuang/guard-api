@@ -24,6 +24,8 @@ class BuildingView(BaseModel):
     building_id: str
     building_name: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class SiteBuildingView(BaseModel):
     site: Site
