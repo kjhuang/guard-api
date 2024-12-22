@@ -2,13 +2,22 @@
 base repository
 """
 
-from typing import Any, Generic, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, joinedload
+from sqlalchemy.sql import Select, asc, desc
 
 ModelType = TypeVar("ModelType", bound=DeclarativeBase)
+
+
+class InvalidRelationError(Exception):
+    pass
+
+
+class InvalidColumnError(Exception):
+    pass
 
 
 class BaseRepository(Generic[ModelType]):
@@ -16,34 +25,122 @@ class BaseRepository(Generic[ModelType]):
         self.session = session
         self.model = model
 
-    # async def get(self, pk: Any) -> ModelType | None:
-    #     """
-    #     Get a single record by primary key.
-    #     Supports any type of primary key.
-    #     """
-    #     return await self.session.get(self.model, pk)
+    def _apply_load_relations(self, query: Select, load_relations: Optional[List[str]]):
+        """
+        Apply relationship loading options to a query.
+        """
+        if load_relations:
+            for relation in load_relations:
+                if hasattr(self.model, relation):
+                    query = query.options(joinedload(getattr(self.model, relation)))
+                else:
+                    raise InvalidRelationError(
+                        f"'{self.model.__name__}' has no relationship '{relation}'"
+                    )
+        return query
 
-    async def get_by_keys(self, **primary_key_values: Any) -> ModelType | None:
+    def _apply_load_relations2(
+        self, query: Select, load_relations: Optional[List[str]]
+    ) -> Select:
         """
-        Get a single record by compound primary keys.
-        :param primary_key_values: Key-value pairs representing the primary keys.
+        Apply relationship loading options to a query, supporting nested relations.
+        Example:
+            load_relations=["site", "site.owner", "comments.author"]
         """
-        stmt = select(self.model).filter_by(**primary_key_values)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+        if not load_relations:
+            return query
 
-    async def get_dynamic(self, **kwargs: Any) -> ModelType | None:
-        """
-        Get a record dynamically based on primary key(s).
-        Automatically retrieves the primary key column(s) from the model.
-        """
-        primary_keys = self.model.__mapper__.primary_key  # SQLAlchemy introspection
-        if not set(kwargs.keys()) == {key.name for key in primary_keys}:
-            raise ValueError("Provided keys do not match model's primary keys")
+        for relation_path in load_relations:
+            parts = relation_path.split(".")
+            current_model = self.model
+            current_loader = joinedload(getattr(current_model, parts[0], None))
 
-        stmt = select(self.model).filter_by(**kwargs)
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
+            if not hasattr(current_model, parts[0]):
+                raise InvalidRelationError(
+                    f"'{current_model.__name__}' has no relationship '{parts[0]}'"
+                )
+
+            for part in parts[1:]:
+                current_model = getattr(current_model, part, None)
+                if current_model is None:
+                    raise InvalidRelationError(
+                        f"'{current_model.__name__}' has no relationship '{part}'"
+                    )
+                current_loader = current_loader.joinedload(part)
+
+            query = query.options(current_loader)
+
+        return query
+
+    def _apply_filters(
+        self, query: Select, filters: Optional[Dict[Tuple[str, str], Any]]
+    ):
+        """
+        Apply dynamic filters to a query.
+        Supports operators like '=', '>=', '<=', 'IN', etc.
+        """
+        if filters:
+            for (field, operator), value in filters.items():
+                if not hasattr(self.model, field):
+                    raise InvalidColumnError(
+                        f"'{self.model.__name__}' has no column '{field}'"
+                    )
+                column = getattr(self.model, field)
+
+                if operator == "=":
+                    query = query.where(column == value)
+                elif operator == "!=":
+                    query = query.where(column != value)
+                elif operator == ">":
+                    query = query.where(column > value)
+                elif operator == "<":
+                    query = query.where(column < value)
+                elif operator == ">=":
+                    query = query.where(column >= value)
+                elif operator == "<=":
+                    query = query.where(column <= value)
+                elif operator == "IN" or operator == "in":
+                    query = query.where(column.in_(value))
+                elif operator == "NOT IN" or operator == "not in":
+                    query = query.where(~column.in_(value))
+                else:
+                    raise ValueError(f"Unsupported operator: {operator}")
+        return query
+
+    def _apply_pagination(
+        self, query: Select, limit: Optional[int], offset: Optional[int]
+    ) -> Select:
+        """
+        Apply pagination to a query.
+        """
+        if limit is not None:
+            query = query.limit(limit)
+        if offset is not None:
+            query = query.offset(offset)
+        return query
+
+    def _apply_sorting(
+        self, query: Select, order_by: Optional[Dict[str, str]] = None
+    ) -> Select:
+        """
+        Apply multi-column sorting to a query.
+        Example:
+            order_by={"name": "asc", "date": "desc"}
+        """
+        if order_by:
+            for column_name, direction in order_by.items():
+                if not hasattr(self.model, column_name):
+                    raise InvalidColumnError(
+                        f"'{self.model.__name__}' has no column '{column_name}'"
+                    )
+                column = getattr(self.model, column_name)
+                if direction == "asc":
+                    query = query.order_by(asc(column))
+                elif direction == "desc":
+                    query = query.order_by(desc(column))
+                else:
+                    raise ValueError(f"Invalid sorting direction: {direction}")
+        return query
 
     async def get_all(self) -> list[ModelType]:
         """
@@ -94,3 +191,44 @@ class BaseRepository(Generic[ModelType]):
         Remove a record from the session.
         """
         await self.session.delete(obj)
+
+    async def get_by_keys(
+        self, load_relations: Optional[List[str]] = None, **primary_key_values: Any
+    ) -> Optional[ModelType]:
+        """
+        Fetch a single object by primary key(s) with optional relationship loading.
+        """
+        query = select(self.model)
+        query = self._apply_load_relations(query, load_relations)
+
+        # Apply primary key filters
+        for key, value in primary_key_values.items():
+            if hasattr(self.model, key):
+                query = query.where(getattr(self.model, key) == value)
+            else:
+                raise InvalidColumnError(
+                    f"'{self.model.__name__}' has no column '{key}'"
+                )
+
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def query(
+        self,
+        load_relations: Optional[List[str]] = None,
+        filters: Optional[Dict[Tuple[str, str], Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        order_by: Optional[Dict[str, str]] = None,
+    ) -> List[ModelType]:
+        """
+        Perform a dynamic query with optional relationship loading and filters.
+        """
+        query = select(self.model)
+        query = self._apply_load_relations(query, load_relations)
+        query = self._apply_filters(query, filters)
+        query = self._apply_pagination(query, limit, offset)
+        query = self._apply_sorting(query, order_by)
+
+        result = await self.session.execute(query)
+        return result.scalars().all()

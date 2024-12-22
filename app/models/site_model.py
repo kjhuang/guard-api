@@ -23,3 +23,6 @@ class Site(Base):
 
     # Relationship with repair order
     repair_orders = relationship("RepairOrder", back_populates="site")
+
+    # Relationship with building
+    buildings = relationship("Building", back_populates="site")
